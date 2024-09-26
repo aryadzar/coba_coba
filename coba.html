@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+</head>
+<body>
+    <div id="reader" style="width: 300px;"></div>
+    <p>Hasil Scan: <span id="result"></span></p>
+
+    <script>
+        function onScanSuccess(decodedText, decodedResult) {
+          // Aksi setelah berhasil scan
+          document.getElementById('result').innerText = decodedText;
+          // Jika ingin berhenti setelah scan pertama, tambahkan:
+          html5QrCode.stop();
+        }
+      
+        function onScanError(errorMessage) {
+          // Error handling jika scan gagal
+          console.warn(`Scan error: ${errorMessage}`);
+        }
+      
+        // Inisialisasi scanner
+        const html5QrCode = new Html5Qrcode("reader");
+      
+        // Menggunakan kamera belakang jika tersedia
+        Html5Qrcode.getCameras().then(devices => {
+          if (devices && devices.length) {
+            let cameraId = devices[0].id; // Pilih kamera pertama
+            html5QrCode.start(
+              cameraId, 
+              { fps: 10, qrbox: 250 }, // Konfigurasi scanning
+              onScanSuccess,
+              onScanError
+            );
+          }
+        }).catch(err => {
+          console.error(`Failed to get cameras: ${err}`);
+        });
+      </script>
+      
+</body>
+</html>
