@@ -3,50 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>QR Code Scanner</title>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
-    <div id="reader" style="width: 300px;"></div>
+    <div>
+        <label for="cameraSelection">Pilih Kamera: </label>
+        <select id="cameraSelection">
+            <option value="">Pilih kamera</option>
+        </select>
+    </div>
+    <div id="reader" style="width: 300px; margin-top: 10px;"></div>
     <p>Hasil Scan: <span id="result"></span></p>
 
     <script>
-// Inisialisasi Html5QrcodeScanner
-const html5QrCode = new Html5Qrcode("reader");
+        // Inisialisasi Html5Qrcode
+        const html5QrCode = new Html5Qrcode("reader");
+        const cameraSelection = document.getElementById('cameraSelection');
 
-// Dapatkan daftar kamera yang tersedia
-Html5Qrcode.getCameras().then(devices => {
-    // Cari kamera yang mengandung "back" atau "rear" di labelnya
-    const backCamera = devices.find(device => 
-        device.label.toLowerCase().includes('back') || 
-        device.label.toLowerCase().includes('rear')
-    );
+        // Fungsi untuk memulai scanner dengan kamera yang dipilih
+        function startQrCodeScanner(cameraId) {
+            html5QrCode.start(
+                cameraId,
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                qrCodeMessage => {
+                    // Fungsi callback saat QR code terdeteksi
+                    document.getElementById('result').innerText = qrCodeMessage;
+                    console.log(`QR Code detected: ${qrCodeMessage}`);
+                },
+                errorMessage => {
+                    // Fungsi callback saat terjadi error
+                    console.warn(`QR Code scanning error: ${errorMessage}`);
+                }
+            ).catch(err => {
+                console.error("Error memulai scanning:", err);
+            });
+        }
 
-    if (backCamera) {
-        // Memulai scanning menggunakan kamera belakang
-        html5QrCode.start(
-            backCamera.id, 
-            {
-                fps: 10,    // frame per second
-                qrbox: { width: 250, height: 250 }  // ukuran area scan
-            },
-            qrCodeMessage => {
-                // Fungsi callback saat QR code terdeteksi
-                console.log(`QR Code detected: ${qrCodeMessage}`);
-            },
-            errorMessage => {
-                // Fungsi callback saat terjadi error
-                console.warn(`QR Code scanning error: ${errorMessage}`);
-            }
-        );
-    } else {
-        console.error("Kamera belakang tidak ditemukan!");
+        // Mendapatkan daftar kamera yang tersedia
+        Html5Qrcode.getCameras().then(devices => {
+            if (devices.length > 0) {
+                // Menambahkan kamera ke dalam dropdown
+                devices.forEach((device, index) => {
+                    const option = document.createElement('option');
+                    option.value = device.id;
+                    option.text = device.label || `Kamera ${index + 1}`;
+                    cameraSelection.appendChild(option);
+                });
+
+                // Menjalankan scanner saat kamera dipilih
+                cameraSelection.addEventListener('change', () => {
+                    const selectedCameraId = cameraSelection.value;
+                    if (selectedCameraId) {
+                        html5QrCode.stop().then(() => {
+                            startQrCodeScanner(selectedCameraId);
+                        }).catch(err => {
+                            console.error("Error menghentikan scanner:", err);
+                        });
+                    }
+                });
+            } else {
+                console.error("Tidak ada kamera yang ditemukan!");
             }
         }).catch(err => {
             console.error("Error mendapatkan kamera:", err);
         });
-
-      </script>
-      
+    </script>
 </body>
 </html>
