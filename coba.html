@@ -20,6 +20,7 @@
         // Inisialisasi Html5Qrcode
         const html5QrCode = new Html5Qrcode("reader");
         const cameraSelection = document.getElementById('cameraSelection');
+        let isScannerRunning = false; // Status scanner
 
         // Fungsi untuk memulai scanner dengan kamera yang dipilih
         function startQrCodeScanner(cameraId) {
@@ -35,9 +36,22 @@
                     // Fungsi callback saat terjadi error
                     console.warn(`QR Code scanning error: ${errorMessage}`);
                 }
-            ).catch(err => {
+            ).then(() => {
+                isScannerRunning = true; // Set status saat scanner berjalan
+            }).catch(err => {
                 console.error("Error memulai scanning:", err);
             });
+        }
+
+        // Fungsi untuk menghentikan scanner jika sedang berjalan
+        function stopQrCodeScanner() {
+            if (isScannerRunning) {
+                html5QrCode.stop().then(() => {
+                    isScannerRunning = false; // Update status setelah scanner berhenti
+                }).catch(err => {
+                    console.error("Error menghentikan scanner:", err);
+                });
+            }
         }
 
         // Mendapatkan daftar kamera yang tersedia
@@ -55,11 +69,8 @@
                 cameraSelection.addEventListener('change', () => {
                     const selectedCameraId = cameraSelection.value;
                     if (selectedCameraId) {
-                        html5QrCode.stop().then(() => {
-                            startQrCodeScanner(selectedCameraId);
-                        }).catch(err => {
-                            console.error("Error menghentikan scanner:", err);
-                        });
+                        stopQrCodeScanner(); // Menghentikan scanner jika berjalan
+                        startQrCodeScanner(selectedCameraId); // Memulai scanner dengan kamera baru
                     }
                 });
             } else {
