@@ -38,6 +38,7 @@
                             // Ketika QR code berhasil discan
                             document.getElementById('result').innerHTML = `QR Code Result: ${qrCodeMessage}`;
                         },
+                        { facingMode: { exact: "environment"} },
                         errorMessage => {
                             // Ketika ada error dalam proses scanning
                             console.log(`Error: ${errorMessage}`);
