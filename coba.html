@@ -60,14 +60,31 @@
                 // Setelah izin diberikan, dapatkan daftar kamera
                 Html5Qrcode.getCameras().then(devices => {
                     if (devices.length > 0) {
+                        let backCameraFound = false;
                         // Menambahkan kamera ke dalam dropdown
                         devices.forEach((device, index) => {
                             const option = document.createElement('option');
                             option.value = device.id;
-                            // Menggunakan nama kamera atau berdasarkan urutan (kamera belakang seringkali yang pertama)
-                            option.text = device.label || (index === 0 ? 'Kamera Belakang' : 'Kamera Depan');
+
+                            // Mencoba mencari kamera belakang berdasarkan label
+                            if (device.label.toLowerCase().includes('back') || device.label.toLowerCase().includes('rear')) {
+                                option.text = 'Kamera Belakang';
+                                backCameraFound = true;
+                            } else {
+                                option.text = device.label || `Kamera ${index + 1}`;
+                            }
+                            
                             cameraSelection.appendChild(option);
                         });
+
+                        // Jika ditemukan kamera belakang, pilih otomatis
+                        if (backCameraFound) {
+                            const backCameraOption = Array.from(cameraSelection.options).find(option => option.text === 'Kamera Belakang');
+                            if (backCameraOption) {
+                                cameraSelection.value = backCameraOption.value;
+                                startQrCodeScanner(backCameraOption.value);
+                            }
+                        }
 
                         // Menjalankan scanner saat kamera dipilih
                         cameraSelection.addEventListener('change', () => {
