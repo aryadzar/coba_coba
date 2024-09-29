@@ -9,53 +9,11 @@
     <div id="reader" style="width: 300px; height: 300px;"></div>
     <div id="result"></div>
     <script>
-        function startQRScanner() {
-            const html5QrCode = new Html5Qrcode("reader");
-    
-            // Fungsi untuk mendapatkan ID dari kamera belakang
-            Html5Qrcode.getCameras().then(devices => {
-                if (devices && devices.length) {
-                    // Default menggunakan kamera depan
-                    let cameraId = devices[0].id;
-    
-                    // Mencari kamera belakang di perangkat mobile
-                    for (let device of devices) {
-                        if (device.label.toLowerCase().includes('back')) {
-                            cameraId = device.id;  // Pilih kamera belakang
-                            break;
-                        }
-                    }
-    
-                    // Memulai pemindaian QR code
-                    html5QrCode.start(
-                        cameraId,
-                        {
-                            fps: 10, // Frame per detik
-                            qrbox: { width: 250, height: 250 } // Ukuran kotak scanning
-                        },
-                        qrCodeMessage => {
-                            // Ketika QR code berhasil discan
-                            document.getElementById('result').innerHTML = `QR Code Result: ${qrCodeMessage}`;
-                        },
-                        { facingMode: { exact: "environment"} },
-                        errorMessage => {
-                            // Ketika ada error dalam proses scanning
-                            console.log(`Error: ${errorMessage}`);
-                        }
-                    ).catch(err => {
-                        // Ketika ada error dalam memulai scanning
-                        console.log(`Unable to start scanning: ${err}`);
-                    });
-                }
-            }).catch(err => {
-                console.log(`Unable to get cameras: ${err}`);
-            });
-        }
-    
-        // Memulai scanner ketika halaman dimuat
-        window.onload = function() {
-            startQRScanner();
-        }
+        const html5QrcodeScanner = new Html5QrcodeScanner("reader", {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+        videoConstraints: { facingMode: { exact: "environment" } },
+        });
     </script>
     
 </body>
