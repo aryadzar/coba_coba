@@ -3,80 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Code Scanner</title>
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <title>Document</title>
+    <script src="https://unpkg.com/html5-qrcode/html5-qrcode.min.js"></script>
 </head>
 <body>
-    <div id="reader" style="width: 300px;"></div>
-    <p>Hasil Scan: <span id="result"></span></p>
-
+    <div id="reader" style="width: 300px; height: 300px;"></div>
+    <div id="result"></div>
     <script>
-        // Inisialisasi Html5QrCode
-        const html5QrCode = new Html5Qrcode("reader");
-        let isScannerRunning = false;
-
-        // Fungsi untuk memulai scanner dengan kamera yang dipilih
-        function startQrCodeScanner(cameraId) {
-            html5QrCode.start(
-                cameraId,
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                qrCodeMessage => {
-                    // Fungsi callback saat QR code terdeteksi
-                    document.getElementById('result').innerText = qrCodeMessage;
-                    console.log(`QR Code detected: ${qrCodeMessage}`);
-                },
-                errorMessage => {
-                    // Fungsi callback saat terjadi error
-                    console.warn(`QR Code scanning error: ${errorMessage}`);
-                }
-            ).then(() => {
-                isScannerRunning = true; // Set status saat scanner berjalan
-            }).catch(err => {
-                console.error("Error memulai scanning:", err);
-            });
-        }
-
-        // Fungsi untuk menghentikan scanner jika sedang berjalan
-        function stopQrCodeScanner() {
-            if (isScannerRunning) {
-                html5QrCode.stop().then(() => {
-                    isScannerRunning = false; // Update status setelah scanner berhenti
-                }).catch(err => {
-                    console.error("Error menghentikan scanner:", err);
-                });
-            }
-        }
-
-        // Mendapatkan daftar kamera yang tersedia dan memilih kamera belakang
-        navigator.mediaDevices.getUserMedia({ video: true })
-            .then(() => {
-                // Setelah izin diberikan, dapatkan daftar kamera
-                Html5Qrcode.getCameras().then(devices => {
-                    if (devices.length > 0) {
-                        // Cari kamera belakang berdasarkan label
-                        const backCamera = devices.find(device =>
-                            device.label.toLowerCase().includes('back') || 
-                            device.label.toLowerCase().includes('rear')
-                        );
-
-                        if (backCamera) {
-                            // Jika ditemukan kamera belakang, gunakan
-                            startQrCodeScanner(backCamera.id);
-                        } else {
-                            // Jika tidak ditemukan kamera belakang, fallback ke kamera pertama
-                            console.warn("Kamera belakang tidak ditemukan, menggunakan kamera pertama.");
-                            startQrCodeScanner(devices[0].id);
+        function startQRScanner() {
+            const html5QrCode = new Html5Qrcode("reader");
+    
+            // Fungsi untuk mendapatkan ID dari kamera belakang
+            Html5Qrcode.getCameras().then(devices => {
+                if (devices && devices.length) {
+                    // Default menggunakan kamera depan
+                    let cameraId = devices[0].id;
+    
+                    // Mencari kamera belakang di perangkat mobile
+                    for (let device of devices) {
+                        if (device.label.toLowerCase().includes('back')) {
+                            cameraId = device.id;  // Pilih kamera belakang
+                            break;
                         }
-                    } else {
-                        console.error("Tidak ada kamera yang ditemukan!");
                     }
-                }).catch(err => {
-                    console.error("Error mendapatkan kamera:", err);
-                });
-            })
-            .catch(err => {
-                console.error("Izin kamera tidak diberikan atau terjadi kesalahan:", err);
+    
+                    // Memulai pemindaian QR code
+                    html5QrCode.start(
+                        cameraId,
+                        {
+                            fps: 10, // Frame per detik
+                            qrbox: { width: 250, height: 250 } // Ukuran kotak scanning
+                        },
+                        qrCodeMessage => {
+                            // Ketika QR code berhasil discan
+                            document.getElementById('result').innerHTML = `QR Code Result: ${qrCodeMessage}`;
+                        },
+                        errorMessage => {
+                            // Ketika ada error dalam proses scanning
+                            console.log(`Error: ${errorMessage}`);
+                        }
+                    ).catch(err => {
+                        // Ketika ada error dalam memulai scanning
+                        console.log(`Unable to start scanning: ${err}`);
+                    });
+                }
+            }).catch(err => {
+                console.log(`Unable to get cameras: ${err}`);
             });
+        }
+    
+        // Memulai scanner ketika halaman dimuat
+        window.onload = function() {
+            startQRScanner();
+        }
     </script>
+    
 </body>
 </html>
