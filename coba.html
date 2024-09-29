@@ -55,30 +55,38 @@
         }
 
         // Mendapatkan daftar kamera yang tersedia
-        Html5Qrcode.getCameras().then(devices => {
-            if (devices.length > 0) {
-                // Menambahkan kamera ke dalam dropdown
-                devices.forEach((device, index) => {
-                    const option = document.createElement('option');
-                    option.value = device.id;
-                    option.text = device.label || `Kamera ${index + 1}`;
-                    cameraSelection.appendChild(option);
-                });
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(() => {
+                // Setelah izin diberikan, dapatkan daftar kamera
+                Html5Qrcode.getCameras().then(devices => {
+                    if (devices.length > 0) {
+                        // Menambahkan kamera ke dalam dropdown
+                        devices.forEach((device, index) => {
+                            const option = document.createElement('option');
+                            option.value = device.id;
+                            // Menggunakan nama kamera atau berdasarkan urutan (kamera belakang seringkali yang pertama)
+                            option.text = device.label || (index === 0 ? 'Kamera Belakang' : 'Kamera Depan');
+                            cameraSelection.appendChild(option);
+                        });
 
-                // Menjalankan scanner saat kamera dipilih
-                cameraSelection.addEventListener('change', () => {
-                    const selectedCameraId = cameraSelection.value;
-                    if (selectedCameraId) {
-                        stopQrCodeScanner(); // Menghentikan scanner jika berjalan
-                        startQrCodeScanner(selectedCameraId); // Memulai scanner dengan kamera baru
+                        // Menjalankan scanner saat kamera dipilih
+                        cameraSelection.addEventListener('change', () => {
+                            const selectedCameraId = cameraSelection.value;
+                            if (selectedCameraId) {
+                                stopQrCodeScanner(); // Menghentikan scanner jika berjalan
+                                startQrCodeScanner(selectedCameraId); // Memulai scanner dengan kamera baru
+                            }
+                        });
+                    } else {
+                        console.error("Tidak ada kamera yang ditemukan!");
                     }
+                }).catch(err => {
+                    console.error("Error mendapatkan kamera:", err);
                 });
-            } else {
-                console.error("Tidak ada kamera yang ditemukan!");
-            }
-        }).catch(err => {
-            console.error("Error mendapatkan kamera:", err);
-        });
+            })
+            .catch(err => {
+                console.error("Izin kamera tidak diberikan atau terjadi kesalahan:", err);
+            });
     </script>
 </body>
 </html>
