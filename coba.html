@@ -7,20 +7,13 @@
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
-    <div>
-        <label for="cameraSelection">Pilih Kamera: </label>
-        <select id="cameraSelection">
-            <option value="">Pilih kamera</option>
-        </select>
-    </div>
-    <div id="reader" style="width: 300px; margin-top: 10px;"></div>
+    <div id="reader" style="width: 300px;"></div>
     <p>Hasil Scan: <span id="result"></span></p>
 
     <script>
-        // Inisialisasi Html5Qrcode
+        // Inisialisasi Html5QrCode
         const html5QrCode = new Html5Qrcode("reader");
-        const cameraSelection = document.getElementById('cameraSelection');
-        let isScannerRunning = false; // Status scanner
+        let isScannerRunning = false;
 
         // Fungsi untuk memulai scanner dengan kamera yang dipilih
         function startQrCodeScanner(cameraId) {
@@ -54,46 +47,26 @@
             }
         }
 
-        // Mendapatkan daftar kamera yang tersedia
+        // Mendapatkan daftar kamera yang tersedia dan memilih kamera belakang
         navigator.mediaDevices.getUserMedia({ video: true })
             .then(() => {
                 // Setelah izin diberikan, dapatkan daftar kamera
                 Html5Qrcode.getCameras().then(devices => {
                     if (devices.length > 0) {
-                        let backCameraFound = false;
-                        // Menambahkan kamera ke dalam dropdown
-                        devices.forEach((device, index) => {
-                            const option = document.createElement('option');
-                            option.value = device.id;
+                        // Cari kamera belakang berdasarkan label
+                        const backCamera = devices.find(device =>
+                            device.label.toLowerCase().includes('back') || 
+                            device.label.toLowerCase().includes('rear')
+                        );
 
-                            // Mencoba mencari kamera belakang berdasarkan label
-                            if (device.label.toLowerCase().includes('back') || device.label.toLowerCase().includes('rear')) {
-                                option.text = 'Kamera Belakang';
-                                backCameraFound = true;
-                            } else {
-                                option.text = device.label || `Kamera ${index + 1}`;
-                            }
-                            
-                            cameraSelection.appendChild(option);
-                        });
-
-                        // Jika ditemukan kamera belakang, pilih otomatis
-                        if (backCameraFound) {
-                            const backCameraOption = Array.from(cameraSelection.options).find(option => option.text === 'Kamera Belakang');
-                            if (backCameraOption) {
-                                cameraSelection.value = backCameraOption.value;
-                                startQrCodeScanner(backCameraOption.value);
-                            }
+                        if (backCamera) {
+                            // Jika ditemukan kamera belakang, gunakan
+                            startQrCodeScanner(backCamera.id);
+                        } else {
+                            // Jika tidak ditemukan kamera belakang, fallback ke kamera pertama
+                            console.warn("Kamera belakang tidak ditemukan, menggunakan kamera pertama.");
+                            startQrCodeScanner(devices[0].id);
                         }
-
-                        // Menjalankan scanner saat kamera dipilih
-                        cameraSelection.addEventListener('change', () => {
-                            const selectedCameraId = cameraSelection.value;
-                            if (selectedCameraId) {
-                                stopQrCodeScanner(); // Menghentikan scanner jika berjalan
-                                startQrCodeScanner(selectedCameraId); // Memulai scanner dengan kamera baru
-                            }
-                        });
                     } else {
                         console.error("Tidak ada kamera yang ditemukan!");
                     }
